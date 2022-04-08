@@ -11,19 +11,20 @@ namespace LinkMe.OCRFunction;
 public class OCRCallout
 {
 
-    public static async Task<HttpResponseMessage> Send(IFormFile file)
+    public static async Task<HttpResponseMessage> Send(string base64Image)
     {
 
-        string base64Image = FormatConverter.ConvertIFormToBase64(file);
+        //string base64Image = FormatConverter.ConvertIFormToBase64(file);
         
         try
         {
             HttpClient httpClient = new HttpClient();
-            httpClient.Timeout = new TimeSpan(1, 1, 1);
+            httpClient.Timeout = new TimeSpan(0, 2, 0);
 
 
             MultipartFormDataContent form = new MultipartFormDataContent();
-            form.Add(new StringContent(Environment.GetEnvironmentVariable("OCR_API_KEY")), "apikey"); //Added api key in form data
+            form.Add(new StringContent("K83553526888957"), "apikey"); //Added api key in form data
+            //form.Add(new StringContent(Environment.GetEnvironmentVariable("OCR_API_KEY")), "apikey");
             form.Add(new StringContent(base64Image), "base64Image");
             form.Add(new StringContent("eng"), "language");
             form.Add(new StringContent("1"), "ocrengine");

@@ -14,4 +14,16 @@ public class StringValidation
 
         return result;
     }
+
+    public static string RemoveEscapes(string s)
+    {
+        s = s.Replace("\n", "");
+        s = s.Replace("\r", "");
+        s = s.Replace("\t", "");
+        s = s.Replace("\\", "");
+        s = s.Replace("\'", "");
+        s = s.Replace("\"", "");
+
+        return s;
+    }
 }

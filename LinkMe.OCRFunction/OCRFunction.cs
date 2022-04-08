@@ -20,28 +20,43 @@ public static class OCRFunction
     public static async Task<IActionResult> RunAsync(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log)
     {
-        try
+        
+        
+        log.LogInformation("C# HTTP trigger function processed a request.");
+
+        string imageString = req.Query["imageString"];
+
+        string requestBody = String.Empty;
+        using (StreamReader streamReader =  new  StreamReader(req.Body))
         {
-            var formdata = await req.ReadFormAsync();
-            var file = req.Form.Files["file"];
+            requestBody = await streamReader.ReadToEndAsync();
+        }
+        dynamic data = JsonConvert.DeserializeObject(requestBody);
+        imageString = imageString ?? data?.imageString;
 
-            HttpResponseMessage resp = await OCRCallout.Send(file);
+        
+        HttpResponseMessage OCRresponse = await OCRCallout.Send(imageString);
+        
+        OCRResponse resp = await FormatConverter.ConvertOCRReponseToObject(OCRresponse);
+        
 
-            string text = await FormatConverter.ConvertOCRReponseToString(resp);
+        if (resp.ParsedResults[0].FileParseExitCode == "1")
+        {
+            //we have a successful parse
+            //strip any weird returns from the text.
+            string url = StringValidation.RemoveEscapes(resp.ParsedResults[0].ParsedText);
 
-            if (StringValidation.ValidateUrl(text))
+            //check if the url is valid
+            if (StringValidation.ValidateUrl(url))
             {
-                return new OkObjectResult(text);
-            }
-            else
-            {
-                throw new Exception("bad shit");
+                return (ActionResult)new OkObjectResult($"{url}");
             }
             
+            new BadRequestObjectResult("Soemthing went wrooooong");
+            
         }
-        catch (Exception ex)
-        {
-            return new BadRequestObjectResult(ex);
-        }
+
+        return new BadRequestObjectResult("something went wrong bad");
+
     }
 }
