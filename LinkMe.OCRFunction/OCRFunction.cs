@@ -24,7 +24,20 @@ public static class OCRFunction
         {
             var formdata = await req.ReadFormAsync();
             var file = req.Form.Files["file"];
-            return new OkObjectResult(file.FileName + " - " + file.Length.ToString());
+
+            HttpResponseMessage resp = await OCRCallout.Send(file);
+
+            string text = await FormatConverter.ConvertOCRReponseToString(resp);
+
+            if (StringValidation.ValidateUrl(text))
+            {
+                return new OkObjectResult(text);
+            }
+            else
+            {
+                throw new Exception("bad shit");
+            }
+            
         }
         catch (Exception ex)
         {
