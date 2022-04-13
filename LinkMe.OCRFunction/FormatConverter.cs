@@ -13,9 +13,9 @@ public class FormatConverter
 {
 
 
-    public async static Task<OCRResponse> ConvertOCRReponseToObject(HttpResponseMessage response)
+    public static OCRResponse ConvertOCRReponseToObject(HttpResponseMessage response)
     {
-        string strContent = await response.Content.ReadAsStringAsync();
+        string strContent = response.Content.ToString();
         
         Console.WriteLine(strContent);
 

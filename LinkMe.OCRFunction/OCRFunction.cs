@@ -35,28 +35,48 @@ public static class OCRFunction
         imageString = imageString ?? data?.imageString;
 
         
-        HttpResponseMessage OCRresponse = await OCRCallout.Send(imageString);
-        
-        OCRResponse resp = await FormatConverter.ConvertOCRReponseToObject(OCRresponse);
-        
+        HttpResponseMessage ocrresponse = await OCRCallout.SendAsync(imageString);
+    
+        FunctionResponse response = new FunctionResponse();
 
-        if (resp.ParsedResults[0].FileParseExitCode == "1")
+        if (ocrresponse.IsSuccessStatusCode == false)
         {
-            //we have a successful parse
-            //strip any weird returns from the text.
-            string url = StringValidation.RemoveEscapes(resp.ParsedResults[0].ParsedText);
-
-            //check if the url is valid
-            if (StringValidation.ValidateUrl(url))
-            {
-                return (ActionResult)new OkObjectResult($"{url}");
-            }
-            
-            new BadRequestObjectResult("Soemthing went wrooooong");
-            
+            //return an error.
+            response.error = "the OCR API was unsuccessful.";
+            return new BadRequestObjectResult(response);
         }
+        else
+        {
+            //process the successful response.
 
-        return new BadRequestObjectResult("something went wrong bad");
+            OCRResponse convertedImage = FormatConverter.ConvertOCRReponseToObject(ocrresponse);
 
+            var exitCode = convertedImage.ParsedResults[0].FileParseExitCode;
+
+            if (exitCode != "1")
+            {
+                //handle the problem.
+                response.error = "the image was not processed successfully. Please take a new photo and try again.";
+                return (ActionResult) new BadRequestObjectResult(response);
+            }
+            else
+            {
+                //we have a successful parse
+                //strip any weird returns from the text.
+                string url = StringValidation.RemoveEscapes(convertedImage.ParsedResults[0].ParsedText);
+
+                //check if the url is valid
+                if (StringValidation.ValidateUrl(url) == true)
+                {
+                    response.url = url;
+                    return (ActionResult) new OkObjectResult(response);
+                }
+                else
+                {
+                    response.error = "the image does not contain a valid URL.";
+                    return (ActionResult) new BadRequestObjectResult(response);
+                }
+            }
+        }
     }
 }
