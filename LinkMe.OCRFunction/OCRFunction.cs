@@ -49,7 +49,7 @@ public static class OCRFunction
         {
             //process the successful response.
 
-            OCRResponse convertedImage = FormatConverter.ConvertOCRReponseToObject(ocrresponse);
+            OCRResponse convertedImage = await FormatConverter.ConvertOCRReponseToObject(ocrresponse);
 
             var exitCode = convertedImage.ParsedResults[0].FileParseExitCode;
 
